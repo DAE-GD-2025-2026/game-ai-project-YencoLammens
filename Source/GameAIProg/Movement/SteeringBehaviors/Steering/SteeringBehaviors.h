@@ -5,14 +5,12 @@
 
 class ASteeringAgent;
 
-// SteeringBehavior base, all steering behaviors should derive from this.
 class ISteeringBehavior
 {
 public:
 	ISteeringBehavior() = default;
 	virtual ~ISteeringBehavior() = default;
 
-	// Override to implement your own behavior
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) = 0;
 
 	void SetTarget(const FTargetData& NewTarget) { Target = NewTarget; }
@@ -25,7 +23,6 @@ protected:
 	FTargetData Target;
 };
 
-// Your own SteeringBehaviors should follow here...
 class Seek : public ISteeringBehavior
 {
 public:
@@ -37,9 +34,73 @@ public:
 
 class Flee : public ISteeringBehavior
 {
-	public:
+public:
 	Flee() = default;
 	virtual ~Flee() = default;
 	
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) override;
+};
+
+class Arrive : public ISteeringBehavior
+{
+public:
+	Arrive() = default;
+	virtual ~Arrive() override; 
+	
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) override;
+
+	void SetSlowRadius(float Radius) { SlowRadius = Radius; }
+	void SetTargetRadius(float Radius) { TargetRadius = Radius; }
+	
+private:
+	float SlowRadius = 500.f;
+	float TargetRadius = 50.f;
+	float OriginalMaxSpeed = 0.f;
+	ASteeringAgent* pAgent = nullptr;
+};
+
+class Face : public ISteeringBehavior
+{
+public:
+	Face() = default;
+	virtual ~Face() = default;
+	
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) override;
+};
+
+class Pursuit : public ISteeringBehavior
+{
+public:
+	Pursuit() = default;
+	virtual ~Pursuit() = default;
+	
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) override;
+};
+
+class Evade : public ISteeringBehavior
+{
+public:
+	Evade() = default;
+	virtual ~Evade() = default;
+	
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) override;
+};
+
+class Wander : public Seek
+{
+public:
+	Wander() = default;
+	virtual ~Wander() = default;
+	
+	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) override;
+
+	void SetWanderOffset(float offset) { m_OffsetDistance = offset; }
+	void SetWanderRadius(float radius) { m_Radius = radius; }
+	void SetMaxAngleChange(float rad) { m_MaxAngleChange = rad; }
+
+private:
+	float m_OffsetDistance = 6.f;
+	float m_Radius = 4.f;
+	float m_MaxAngleChange = FMath::DegreesToRadians(45.f);
+	float m_WanderAngle = 0.f;
 };

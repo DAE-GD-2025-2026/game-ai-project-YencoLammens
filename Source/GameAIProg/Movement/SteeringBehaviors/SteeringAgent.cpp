@@ -21,6 +21,7 @@ void ASteeringAgent::BeginDestroy()
 	Super::BeginDestroy();
 }
 
+
 // Called every frame
 void ASteeringAgent::Tick(float DeltaTime)
 {
@@ -29,7 +30,28 @@ void ASteeringAgent::Tick(float DeltaTime)
 	if (SteeringBehavior)
 	{
 		SteeringOutput output = SteeringBehavior->CalculateSteering(DeltaTime, *this);
-		AddMovementInput(FVector{output.LinearVelocity, 0.f});
+        
+		if (output.IsValid)
+		{
+			if (!output.LinearVelocity.IsNearlyZero())
+			{
+				AddMovementInput(FVector{output.LinearVelocity, 0.f});
+			}
+
+			if (FMath::Abs(output.AngularVelocity) > 0.01f)
+			{
+				float maxAngularSpeed = GetMaxAngularSpeed();
+				float clampedAngularVelocity = FMath::Clamp(
+					output.AngularVelocity, 
+					-maxAngularSpeed, 
+					maxAngularSpeed
+				);
+                
+				FRotator currentRotation = GetActorRotation();
+				currentRotation.Yaw += clampedAngularVelocity * DeltaTime;
+				SetActorRotation(currentRotation);
+			}
+		}
 	}
 }
 
