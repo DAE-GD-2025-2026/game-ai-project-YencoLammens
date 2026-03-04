@@ -2,6 +2,7 @@
 #include "CombinedSteeringBehaviors.h"
 #include <algorithm>
 #include "../SteeringAgent.h"
+#include <algorithm>
 
 BlendedSteering::BlendedSteering(const std::vector<WeightedBehavior>& WeightedBehaviors)
 	:WeightedBehaviors(WeightedBehaviors)
@@ -12,7 +13,18 @@ BlendedSteering::BlendedSteering(const std::vector<WeightedBehavior>& WeightedBe
 SteeringOutput BlendedSteering::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
 	SteeringOutput BlendedSteering = {};
-	//TODO: Calculate the weighted average steeringbehavior
+
+	for (auto& WeightedBehavior : WeightedBehaviors)
+	{
+		if (WeightedBehavior.pBehavior && WeightedBehavior.Weight > 0.f)
+		{
+			SteeringOutput BehaviorOutput = WeightedBehavior.pBehavior->CalculateSteering(DeltaT, Agent);
+			BlendedSteering.LinearVelocity  += BehaviorOutput.LinearVelocity  * WeightedBehavior.Weight;
+			BlendedSteering.AngularVelocity += BehaviorOutput.AngularVelocity * WeightedBehavior.Weight;
+		}
+	}
+
+	BlendedSteering.IsValid = true;
 
 	if (Agent.GetDebugRenderingEnabled())
 		DrawDebugDirectionalArrow(
@@ -42,3 +54,4 @@ SteeringOutput PrioritySteering::CalculateSteering(float DeltaT, ASteeringAgent&
 	//If non of the behavior return a valid output, last behavior is returned
 	return Steering;
 }
+
