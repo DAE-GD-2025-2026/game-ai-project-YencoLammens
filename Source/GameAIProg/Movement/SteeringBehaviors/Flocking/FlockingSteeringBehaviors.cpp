@@ -35,7 +35,7 @@ SteeringOutput Separation::CalculateSteering(float deltaT, ASteeringAgent& pAgen
 		FVector2D ToNeighbor = Neighbors[i]->GetPosition() - pAgent.GetPosition();
 		float Distance = ToNeighbor.Length();
 		if (Distance > 0.f)
-			TotalForce += -ToNeighbor.GetSafeNormal() * (1.f / Distance);
+			TotalForce += -ToNeighbor.GetSafeNormal() * (1.f / (Distance / 100.f));
 	}
 
 	Steering.LinearVelocity = TotalForce;

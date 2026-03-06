@@ -43,10 +43,10 @@ Flock::Flock(
 
 	std::vector<BlendedSteering::WeightedBehavior> BlendedBehaviors;
 	BlendedBehaviors.emplace_back(pSeekBehavior.get(),       0.0f);
-	BlendedBehaviors.emplace_back(pWanderBehavior.get(),     0.2f);
-	BlendedBehaviors.emplace_back(pCohesionBehavior.get(),   0.2f);
-	BlendedBehaviors.emplace_back(pSeparationBehavior.get(), 0.2f);
-	BlendedBehaviors.emplace_back(pVelMatchBehavior.get(),   0.2f);
+	BlendedBehaviors.emplace_back(pWanderBehavior.get(),     0.5f);
+	BlendedBehaviors.emplace_back(pCohesionBehavior.get(),   0.3f);
+	BlendedBehaviors.emplace_back(pSeparationBehavior.get(), 0.8f);
+	BlendedBehaviors.emplace_back(pVelMatchBehavior.get(),   0.3f);
 	pBlendedSteering = std::make_unique<BlendedSteering>(BlendedBehaviors);
 
 	for (ASteeringAgent* pAgent : Agents)
@@ -73,8 +73,6 @@ void Flock::Tick(float DeltaTime)
 		if (!pAgent) continue;
 
 		RegisterNeighbors(pAgent);
-
-		pAgent->Tick(DeltaTime);
 
 		if (bTrimWorld)
 		{
