@@ -17,12 +17,12 @@ class Flock final
 {
 public:
 	Flock(
-	UWorld* pWorld,
-	TSubclassOf<ASteeringAgent> AgentClass,
-	int FlockSize = 10, 
-	float WorldSize = 100.f, 
-	ASteeringAgent* const pAgentToEvade = nullptr, 
-	bool bTrimWorld = false);
+		UWorld* pWorld,
+		TSubclassOf<ASteeringAgent> AgentClass,
+		int FlockSize = 10,
+		float WorldSize = 100.f,
+		ASteeringAgent* const pAgentToEvade = nullptr,
+		bool bTrimWorld = false);
 
 	~Flock();
 
@@ -39,17 +39,20 @@ public:
 	const TArray<ASteeringAgent*>& GetNeighbors() const { return Neighbors; }
 #endif // USE_SPACE_PARTITIONING
 
-	FVector2D GetAverageNeighborPos() const;
+	FVector2D GetAverageNeighborPos()      const;
 	FVector2D GetAverageNeighborVelocity() const;
 
-	void SetTarget_Seek(FSteeringParams const & Target);
+	void SetTarget_Seek(FSteeringParams const& Target);
 
 private:
+	void RenderNeighborhood();
+
 	// For debug rendering purposes
 	UWorld* pWorld{nullptr};
-	
+
 	int FlockSize{0};
 	TArray<ASteeringAgent*> Agents{};
+
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
 	//std::unique_ptr<CellSpace> pPartitionedSpace{};
 	//int NrOfCellsX{ 10 };
@@ -57,32 +60,28 @@ private:
 #else // No space partitioning
 	TArray<ASteeringAgent*> Neighbors{};
 #endif // USE_SPACE_PARTITIONING
-	
+
 	float NeighborhoodRadius{200.f};
-	int NrOfNeighbors{0};
+	int   NrOfNeighbors{0};
 
 	ASteeringAgent* pAgentToEvade{nullptr};
-	
-	
+
 	float WorldSize{0.f};
-	bool bTrimWorld{false};
+	bool  bTrimWorld{false};
 	TSubclassOf<ASteeringAgent> AgentClass{};
-	
-	
-	//Steering Behaviors
-	std::unique_ptr<Separation> pSeparationBehavior{};
-	std::unique_ptr<Cohesion> pCohesionBehavior{};
-	std::unique_ptr<VelocityMatch> pVelMatchBehavior{};
-	std::unique_ptr<Seek> pSeekBehavior{};
-	std::unique_ptr<Wander> pWanderBehavior{};
-	//std::unique_ptr<Evade> pEvadeBehavior{};
+
+	// Steering Behaviors
+	std::unique_ptr<Separation>      pSeparationBehavior{};
+	std::unique_ptr<Cohesion>        pCohesionBehavior{};
+	std::unique_ptr<VelocityMatch>   pVelMatchBehavior{};
+	std::unique_ptr<Seek>            pSeekBehavior{};
+	std::unique_ptr<Wander>          pWanderBehavior{};
+	//std::unique_ptr<Evade>         pEvadeBehavior{};
 	std::unique_ptr<BlendedSteering> pBlendedSteering{};
 	std::unique_ptr<PrioritySteering> pPrioritySteering{};
 
 	// UI and rendering
-	bool DebugRenderSteering{false};
-	bool DebugRenderNeighborhood{true};
-	bool DebugRenderPartitions{true};
-
-	void RenderNeighborhood();
+	bool bDebugRenderSteering{false};
+	bool bDebugRenderNeighborhood{false};
+	bool bDebugRenderPartitions{true};
 };

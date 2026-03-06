@@ -1,6 +1,7 @@
 #include "Flock.h"
 #include "FlockingSteeringBehaviors.h"
 #include "Shared/ImGuiHelpers.h"
+#include "DrawDebugHelpers.h"
 
 Flock::Flock(
 	UWorld* pWorld,
@@ -28,18 +29,18 @@ Flock::Flock(
 		float RandomY = FMath::RandRange(-WorldSize * 0.5f, WorldSize * 0.5f);
 
 		Agents[i] = pWorld->SpawnActor<ASteeringAgent>(
-			AgentClass,
-			FVector(RandomX, RandomY, 0.f),
-			FRotator::ZeroRotator,
-			SpawnParams
-		);
+	AgentClass,
+	FVector(RandomX, RandomY, 90.f), 
+	FRotator::ZeroRotator,
+	SpawnParams
+);
 	}
 
-	pSeekBehavior         = std::make_unique<Seek>();
-	pWanderBehavior       = std::make_unique<Wander>();
-	pCohesionBehavior     = std::make_unique<Cohesion>(this);
-	pSeparationBehavior   = std::make_unique<Separation>(this);
-	pVelMatchBehavior     = std::make_unique<VelocityMatch>(this);
+	pSeekBehavior       = std::make_unique<Seek>();
+	pWanderBehavior     = std::make_unique<Wander>();
+	pCohesionBehavior   = std::make_unique<Cohesion>(this);
+	pSeparationBehavior = std::make_unique<Separation>(this);
+	pVelMatchBehavior   = std::make_unique<VelocityMatch>(this);
 
 	std::vector<BlendedSteering::WeightedBehavior> BlendedBehaviors;
 	BlendedBehaviors.emplace_back(pSeekBehavior.get(),       0.0f);
@@ -78,9 +79,14 @@ void Flock::Tick(float DeltaTime)
 		{
 			FVector2D Pos = pAgent->GetPosition();
 			float Half = WorldSize * 0.5f;
-			Pos.X = FMath::Clamp(Pos.X, -Half, Half);
-			Pos.Y = FMath::Clamp(Pos.Y, -Half, Half);
-			pAgent->SetActorLocation(FVector(Pos, 0.f));
+			bool bClamped = false;
+			if (Pos.X < -Half || Pos.X > Half || Pos.Y < -Half || Pos.Y > Half)
+			{
+				Pos.X = FMath::Clamp(Pos.X, -Half, Half);
+				Pos.Y = FMath::Clamp(Pos.Y, -Half, Half);
+				pAgent->SetActorLocation(FVector(Pos, 90.f));
+				pAgent->GetCharacterMovement()->StopMovementImmediately();
+			}
 		}
 	}
 }
@@ -88,6 +94,8 @@ void Flock::Tick(float DeltaTime)
 void Flock::RenderDebug()
 {
  // TODO: Render all the agents in the flock
+	if (bDebugRenderNeighborhood && Agents.Num() > 0)
+		RenderNeighborhood();
 }
 
 void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
@@ -129,11 +137,40 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 		ImGui::Spacing();
 
   // TODO: implement ImGUI checkboxes for debug rendering here
+		bool bPrevDebugSteering = bDebugRenderSteering;
+		ImGui::Checkbox("Debug Steering", &bDebugRenderSteering);
+		if (bDebugRenderSteering != bPrevDebugSteering)
+			for (ASteeringAgent* pAgent : Agents)
+				if (pAgent) pAgent->SetDebugRenderingEnabled(bDebugRenderSteering);
 
+		ImGui::Checkbox("Debug Neighborhood", &bDebugRenderNeighborhood);
+
+		ImGui::Spacing();
 		ImGui::Text("Behavior Weights");
 		ImGui::Spacing();
 
   // TODO: implement ImGUI sliders for steering behavior weights here
+		auto& Behaviors = pBlendedSteering->GetWeightedBehaviorsRef();
+
+		float SeekW = Behaviors[0].Weight;
+		if (ImGui::SliderFloat("Seek",         &SeekW,  0.f, 1.f, "%.2f")) Behaviors[0].Weight = SeekW;
+
+		float WanderW = Behaviors[1].Weight;
+		if (ImGui::SliderFloat("Wander",       &WanderW, 0.f, 1.f, "%.2f")) Behaviors[1].Weight = WanderW;
+
+		float CohesionW = Behaviors[2].Weight;
+		if (ImGui::SliderFloat("Cohesion",     &CohesionW, 0.f, 1.f, "%.2f")) Behaviors[2].Weight = CohesionW;
+
+		float SeparationW = Behaviors[3].Weight;
+		if (ImGui::SliderFloat("Separation",   &SeparationW, 0.f, 1.f, "%.2f")) Behaviors[3].Weight = SeparationW;
+
+		float VelMatchW = Behaviors[4].Weight;
+		if (ImGui::SliderFloat("VelocityMatch",&VelMatchW, 0.f, 1.f, "%.2f")) Behaviors[4].Weight = VelMatchW;
+
+		ImGui::Spacing();
+		ImGuiHelpers::ImGuiSliderFloatWithSetter("Neighborhood Radius",
+			NeighborhoodRadius, 50.f, 500.f,
+			[this](float InVal) { NeighborhoodRadius = InVal; }, "%.0f");
 
 		//End
 		ImGui::End();
@@ -145,6 +182,31 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 void Flock::RenderNeighborhood()
 {
  // TODO: Debugrender the neighbors for the first agent in the flock
+	if (Agents.Num() == 0 || !Agents[0]) return;
+
+	ASteeringAgent* pFirst = Agents[0];
+	FVector2D AgentPos = pFirst->GetPosition();
+
+	DrawDebugCircle(pFirst->GetWorld(),
+		FVector(AgentPos, 0.f),
+		NeighborhoodRadius,
+		32, FColor::Yellow, false, -1.f, 0, 2.f,
+		FVector(0, 1, 0), FVector(1, 0, 0));
+
+	const TArray<ASteeringAgent*>& Nbrs = GetNeighbors();
+	for (int i = 0; i < GetNrOfNeighbors(); ++i)
+	{
+		if (!Nbrs[i]) continue;
+		DrawDebugLine(pFirst->GetWorld(),
+			FVector(AgentPos, 0.f),
+			FVector(Nbrs[i]->GetPosition(), 0.f),
+			FColor::Yellow, false, -1.f, 0, 1.5f);
+
+		DrawDebugCircle(pFirst->GetWorld(),
+			FVector(Nbrs[i]->GetPosition(), 0.f),
+			15.f, 12, FColor::Orange, false, -1.f, 0, 2.f,
+			FVector(0, 1, 0), FVector(1, 0, 0));
+	}
 }
 
 #ifndef GAMEAI_USE_SPACE_PARTITIONING

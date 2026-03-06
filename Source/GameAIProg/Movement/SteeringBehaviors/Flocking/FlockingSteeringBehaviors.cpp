@@ -35,12 +35,16 @@ SteeringOutput Separation::CalculateSteering(float deltaT, ASteeringAgent& pAgen
 		FVector2D ToNeighbor = Neighbors[i]->GetPosition() - pAgent.GetPosition();
 		float Distance = ToNeighbor.Length();
 		if (Distance > 0.f)
-			TotalForce += -ToNeighbor.GetSafeNormal() * (1.f / (Distance / 100.f));
+		{
+			float DistanceInMeters = Distance / 100.f;
+			TotalForce += -ToNeighbor.GetSafeNormal() * (1.f / (DistanceInMeters * DistanceInMeters));
+		}
 	}
 
 	Steering.LinearVelocity = TotalForce;
 	return Steering;
 }
+
 //*************************
 //VELOCITY MATCH (FLOCKING)
 SteeringOutput VelocityMatch::CalculateSteering(float deltaT, ASteeringAgent& pAgent)
