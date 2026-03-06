@@ -11,11 +11,10 @@ SteeringOutput Cohesion::CalculateSteering(float deltaT, ASteeringAgent& pAgent)
 	if (pFlock->GetNrOfNeighbors() == 0)
 		return SteeringOutput{};
 
-	FTargetData CohesionTarget;
-	CohesionTarget.Position = pFlock->GetAverageNeighborPos();
-	SetTarget(CohesionTarget);
-
-	return Seek::CalculateSteering(deltaT, pAgent);
+	SteeringOutput Steering{};
+	FVector2D ToCenter = pFlock->GetAverageNeighborPos() - pAgent.GetPosition();
+	Steering.LinearVelocity = ToCenter.GetSafeNormal();
+	return Steering;
 }
 
 //*********************
