@@ -90,15 +90,6 @@ void Flock::Tick(float DeltaTime)
 			EvadeTarget.LinearVelocity = FVector2D(pAgentToEvade->GetVelocity());
 			pEvadeBehavior->SetTarget(EvadeTarget);
 		}
-
-		if (bTrimWorld)
-		{
-			FVector2D Pos = pAgent->GetPosition();
-			float Half = WorldSize * 0.5f;
-			Pos.X = FMath::Clamp(Pos.X, -Half, Half);
-			Pos.Y = FMath::Clamp(Pos.Y, -Half, Half);
-			pAgent->SetActorLocation(FVector(Pos, 90.f));
-		}
 	}
 }
 

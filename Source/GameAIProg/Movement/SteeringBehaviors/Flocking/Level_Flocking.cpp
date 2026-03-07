@@ -16,7 +16,7 @@ void ALevel_Flocking::BeginPlay()
 {
 	Super::BeginPlay();
 
-	TrimWorld->SetTrimWorldSize(3000.f);
+	TrimWorld->SetTrimWorldSize(1500.f);
 	TrimWorld->bShouldTrimWorld = true;
 
 	if (pAgentToEvade)
@@ -32,7 +32,7 @@ void ALevel_Flocking::BeginPlay()
 			FlockSize,
 			TrimWorld->GetTrimWorldSize(),
 			pAgentToEvade,
-			true)
+			false)
 			);
 }
 
