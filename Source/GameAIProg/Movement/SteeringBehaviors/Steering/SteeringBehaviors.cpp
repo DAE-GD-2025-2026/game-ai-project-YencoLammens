@@ -229,17 +229,24 @@ SteeringOutput Pursuit::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
 {
     SteeringOutput Steering{};
-    
+
     FVector2D toTarget = Target.Position - Agent.GetPosition();
     float distance = toTarget.Length();
-    
+
+    if (distance > EvadeRadius)
+    {
+        Steering.IsValid = false;
+        return Steering;
+    }
+
     float agentSpeed = Agent.GetMaxLinearSpeed();
     float timeToReach = (agentSpeed > 0.f) ? distance / agentSpeed : 0.f;
-    
+
     FVector2D predictedPosition = Target.Position + (Target.LinearVelocity * timeToReach);
-    
+
     Steering.LinearVelocity = -(predictedPosition - Agent.GetPosition());
-    
+    Steering.IsValid = true;
+
     if (Agent.GetDebugRenderingEnabled())
     {
         FVector2D toPredicted = predictedPosition - Agent.GetPosition();
@@ -247,36 +254,26 @@ SteeringOutput Evade::CalculateSteering(float DeltaT, ASteeringAgent& Agent)
         dirToPredicted.Normalize();
         float lineLength = FMath::Min(toPredicted.Length(), 400.f);
         FVector2D endPoint = Agent.GetPosition() + (dirToPredicted * lineLength);
-        
-        DrawDebugLine(Agent.GetWorld(), 
-            FVector(Agent.GetPosition(), 0), 
-            FVector(endPoint, 0), 
-            FColor::Orange, 
-            false, 
-            -1.f, 
-            0, 
-            1.f);
-        
+
+        DrawDebugLine(Agent.GetWorld(),
+            FVector(Agent.GetPosition(), 0),
+            FVector(endPoint, 0),
+            FColor::Orange, false, -1.f, 0, 1.f);
+
         FVector2D fleeDir = -(toPredicted);
         fleeDir.Normalize();
         FVector2D fleeEndPoint = Agent.GetPosition() + (fleeDir * 250.f);
-        
+
         DrawDebugLine(Agent.GetWorld(),
             FVector(Agent.GetPosition(), 0),
             FVector(fleeEndPoint, 0),
-            FColor::Red,
-            false,
-            -1.f,
-            0,
-            2.f);
-        
-        DrawDebugSphere(Agent.GetWorld(), 
-            FVector(predictedPosition, 0), 
-            20.f, 
-            8, 
-            FColor::Red);
+            FColor::Red, false, -1.f, 0, 2.f);
+
+        DrawDebugSphere(Agent.GetWorld(),
+            FVector(predictedPosition, 0),
+            20.f, 8, FColor::Red);
     }
-    
+
     return Steering;
 }
 

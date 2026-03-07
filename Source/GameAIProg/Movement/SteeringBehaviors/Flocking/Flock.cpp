@@ -29,11 +29,11 @@ Flock::Flock(
 		float RandomY = FMath::RandRange(-WorldSize * 0.5f, WorldSize * 0.5f);
 
 		Agents[i] = pWorld->SpawnActor<ASteeringAgent>(
-	AgentClass,
-	FVector(RandomX, RandomY, 90.f), 
-	FRotator::ZeroRotator,
-	SpawnParams
-);
+			AgentClass,
+			FVector(RandomX, RandomY, 90.f),
+			FRotator::ZeroRotator,
+			SpawnParams
+		);
 	}
 
 	pSeekBehavior       = std::make_unique<Seek>();
@@ -50,9 +50,17 @@ Flock::Flock(
 	BlendedBehaviors.emplace_back(pVelMatchBehavior.get(),   0.2f);
 	pBlendedSteering = std::make_unique<BlendedSteering>(BlendedBehaviors);
 
+	pEvadeBehavior = std::make_unique<Evade>();
+	pEvadeBehavior->SetEvadeRadius(EvadeRadius);
+
+	std::vector<ISteeringBehavior*> PriorityBehaviors;
+	PriorityBehaviors.emplace_back(pEvadeBehavior.get());
+	PriorityBehaviors.emplace_back(pBlendedSteering.get());
+	pPrioritySteering = std::make_unique<PrioritySteering>(PriorityBehaviors);
+
 	for (ASteeringAgent* pAgent : Agents)
 		if (pAgent)
-			pAgent->SetSteeringBehavior(pBlendedSteering.get());
+			pAgent->SetSteeringBehavior(pPrioritySteering.get());
 }
 
 Flock::~Flock()
@@ -75,18 +83,21 @@ void Flock::Tick(float DeltaTime)
 
 		RegisterNeighbors(pAgent);
 
+		if (pAgentToEvade && pEvadeBehavior)
+		{
+			FTargetData EvadeTarget;
+			EvadeTarget.Position       = FVector2D(pAgentToEvade->GetActorLocation());
+			EvadeTarget.LinearVelocity = FVector2D(pAgentToEvade->GetVelocity());
+			pEvadeBehavior->SetTarget(EvadeTarget);
+		}
+
 		if (bTrimWorld)
 		{
 			FVector2D Pos = pAgent->GetPosition();
 			float Half = WorldSize * 0.5f;
-			bool bClamped = false;
-			if (Pos.X < -Half || Pos.X > Half || Pos.Y < -Half || Pos.Y > Half)
-			{
-				Pos.X = FMath::Clamp(Pos.X, -Half, Half);
-				Pos.Y = FMath::Clamp(Pos.Y, -Half, Half);
-				pAgent->SetActorLocation(FVector(Pos, 90.f));
-				pAgent->GetCharacterMovement()->StopMovementImmediately();
-			}
+			Pos.X = FMath::Clamp(Pos.X, -Half, Half);
+			Pos.Y = FMath::Clamp(Pos.Y, -Half, Half);
+			pAgent->SetActorLocation(FVector(Pos, 90.f));
 		}
 	}
 }
@@ -153,24 +164,36 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 		auto& Behaviors = pBlendedSteering->GetWeightedBehaviorsRef();
 
 		float SeekW = Behaviors[0].Weight;
-		if (ImGui::SliderFloat("Seek",         &SeekW,  0.f, 1.f, "%.2f")) Behaviors[0].Weight = SeekW;
+		if (ImGui::SliderFloat("Seek",          &SeekW,       0.f, 1.f, "%.2f")) Behaviors[0].Weight = SeekW;
 
 		float WanderW = Behaviors[1].Weight;
-		if (ImGui::SliderFloat("Wander",       &WanderW, 0.f, 1.f, "%.2f")) Behaviors[1].Weight = WanderW;
+		if (ImGui::SliderFloat("Wander",        &WanderW,     0.f, 1.f, "%.2f")) Behaviors[1].Weight = WanderW;
 
 		float CohesionW = Behaviors[2].Weight;
-		if (ImGui::SliderFloat("Cohesion",     &CohesionW, 0.f, 1.f, "%.2f")) Behaviors[2].Weight = CohesionW;
+		if (ImGui::SliderFloat("Cohesion",      &CohesionW,   0.f, 1.f, "%.2f")) Behaviors[2].Weight = CohesionW;
 
 		float SeparationW = Behaviors[3].Weight;
-		if (ImGui::SliderFloat("Separation",   &SeparationW, 0.f, 1.f, "%.2f")) Behaviors[3].Weight = SeparationW;
+		if (ImGui::SliderFloat("Separation",    &SeparationW, 0.f, 1.f, "%.2f")) Behaviors[3].Weight = SeparationW;
 
 		float VelMatchW = Behaviors[4].Weight;
-		if (ImGui::SliderFloat("VelocityMatch",&VelMatchW, 0.f, 1.f, "%.2f")) Behaviors[4].Weight = VelMatchW;
+		if (ImGui::SliderFloat("VelocityMatch", &VelMatchW,   0.f, 1.f, "%.2f")) Behaviors[4].Weight = VelMatchW;
 
 		ImGui::Spacing();
 		ImGuiHelpers::ImGuiSliderFloatWithSetter("Neighborhood Radius",
 			NeighborhoodRadius, 50.f, 500.f,
 			[this](float InVal) { NeighborhoodRadius = InVal; }, "%.0f");
+
+		ImGui::Spacing();
+		ImGui::Text("Evade");
+		ImGui::Spacing();
+
+		ImGuiHelpers::ImGuiSliderFloatWithSetter("Evade Radius",
+			EvadeRadius, 50.f, 800.f,
+			[this](float InVal)
+			{
+				EvadeRadius = InVal;
+				if (pEvadeBehavior) pEvadeBehavior->SetEvadeRadius(EvadeRadius);
+			}, "%.0f");
 
 		//End
 		ImGui::End();
@@ -238,7 +261,7 @@ FVector2D Flock::GetAverageNeighborPos() const
 }
 
 FVector2D Flock::GetAverageNeighborVelocity() const
-{
+{ 
 	FVector2D avgVelocity = FVector2D::ZeroVector;
 	int Count = GetNrOfNeighbors();
 	if (Count == 0) return avgVelocity;

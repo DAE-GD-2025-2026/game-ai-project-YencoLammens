@@ -61,7 +61,7 @@ private:
 	TArray<ASteeringAgent*> Neighbors{};
 #endif // USE_SPACE_PARTITIONING
 
-	float NeighborhoodRadius{200.f};
+	float NeighborhoodRadius{150.f};
 	int   NrOfNeighbors{0};
 
 	ASteeringAgent* pAgentToEvade{nullptr};
@@ -71,17 +71,18 @@ private:
 	TSubclassOf<ASteeringAgent> AgentClass{};
 
 	// Steering Behaviors
-	std::unique_ptr<Separation>      pSeparationBehavior{};
-	std::unique_ptr<Cohesion>        pCohesionBehavior{};
-	std::unique_ptr<VelocityMatch>   pVelMatchBehavior{};
-	std::unique_ptr<Seek>            pSeekBehavior{};
-	std::unique_ptr<Wander>          pWanderBehavior{};
-	//std::unique_ptr<Evade>         pEvadeBehavior{};
-	std::unique_ptr<BlendedSteering> pBlendedSteering{};
+	std::unique_ptr<Separation>       pSeparationBehavior{};
+	std::unique_ptr<Cohesion>         pCohesionBehavior{};
+	std::unique_ptr<VelocityMatch>    pVelMatchBehavior{};
+	std::unique_ptr<Seek>             pSeekBehavior{};
+	std::unique_ptr<Wander>           pWanderBehavior{};
+	std::unique_ptr<Evade>            pEvadeBehavior{};
+	std::unique_ptr<BlendedSteering>  pBlendedSteering{};
 	std::unique_ptr<PrioritySteering> pPrioritySteering{};
+
+	float EvadeRadius{300.f};
 
 	// UI and rendering
 	bool bDebugRenderSteering{false};
 	bool bDebugRenderNeighborhood{false};
-	bool bDebugRenderPartitions{true};
 };

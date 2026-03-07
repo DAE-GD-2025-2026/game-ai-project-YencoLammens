@@ -19,6 +19,12 @@ void ALevel_Flocking::BeginPlay()
 	TrimWorld->SetTrimWorldSize(3000.f);
 	TrimWorld->bShouldTrimWorld = true;
 
+	if (pAgentToEvade)
+	{
+		pEvadeAgentWander = std::make_unique<Wander>();
+		pAgentToEvade->SetSteeringBehavior(pEvadeAgentWander.get());
+	}
+	
 	pFlock = TUniquePtr<Flock>(
 		new Flock(
 			GetWorld(),
