@@ -1,17 +1,12 @@
 ﻿#pragma once
 
-// Toggle this define to enable/disable spatial partitioning
-#define GAMEAI_USE_SPACE_PARTITIONING
-
 #include "FlockingSteeringBehaviors.h"
 #include "Movement/SteeringBehaviors/SteeringAgent.h"
 #include "Movement/SteeringBehaviors/SteeringHelpers.h"
 #include "Movement/SteeringBehaviors/CombinedSteering/CombinedSteeringBehaviors.h"
 #include <memory>
 #include "imgui.h"
-#ifdef GAMEAI_USE_SPACE_PARTITIONING
 #include "../SpacePartitioning/SpacePartitioning.h"
-#endif
 
 class Flock final
 {
@@ -30,14 +25,9 @@ public:
 	void RenderDebug();
 	void ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize);
 
-#ifdef GAMEAI_USE_SPACE_PARTITIONING
-	const TArray<ASteeringAgent*>& GetNeighbors() const { return pPartitionedSpace->GetNeighbors(); }
-	int GetNrOfNeighbors() const { return pPartitionedSpace->GetNrOfNeighbors(); }
-#else // No space partitioning
 	void RegisterNeighbors(ASteeringAgent* const Agent);
-	int GetNrOfNeighbors() const { return NrOfNeighbors; }
-	const TArray<ASteeringAgent*>& GetNeighbors() const { return Neighbors; }
-#endif // USE_SPACE_PARTITIONING
+	int GetNrOfNeighbors() const;
+	const TArray<ASteeringAgent*>& GetNeighbors() const;
 
 	FVector2D GetAverageNeighborPos()      const;
 	FVector2D GetAverageNeighborVelocity() const;
@@ -47,22 +37,22 @@ public:
 private:
 	void RenderNeighborhood();
 
-	// For debug rendering purposes
 	UWorld* pWorld{nullptr};
 
 	int FlockSize{0};
 	TArray<ASteeringAgent*> Agents{};
 
-#ifdef GAMEAI_USE_SPACE_PARTITIONING
+	// Space partitioning
 	std::unique_ptr<CellSpace> pPartitionedSpace{};
-	int NrOfCellsX{ 10 };
+	int NrOfCellsX{10};
 	TArray<FVector2D> OldPositions{};
-#else // No space partitioning
+	bool bUseSpacePartitioning{true};
+
+	// Non-partitioned neighbors
 	TArray<ASteeringAgent*> Neighbors{};
-#endif // USE_SPACE_PARTITIONING
+	int NrOfNeighbors{0};
 
 	float NeighborhoodRadius{150.f};
-	int   NrOfNeighbors{0};
 
 	ASteeringAgent* pAgentToEvade{nullptr};
 
@@ -70,7 +60,6 @@ private:
 	bool  bTrimWorld{false};
 	TSubclassOf<ASteeringAgent> AgentClass{};
 
-	// Steering Behaviors
 	std::unique_ptr<Separation>       pSeparationBehavior{};
 	std::unique_ptr<Cohesion>         pCohesionBehavior{};
 	std::unique_ptr<VelocityMatch>    pVelMatchBehavior{};
@@ -82,7 +71,6 @@ private:
 
 	float EvadeRadius{300.f};
 
-	// UI and rendering
 	bool bDebugRenderSteering{false};
 	bool bDebugRenderNeighborhood{false};
 	bool bDebugRenderPartitions{true};

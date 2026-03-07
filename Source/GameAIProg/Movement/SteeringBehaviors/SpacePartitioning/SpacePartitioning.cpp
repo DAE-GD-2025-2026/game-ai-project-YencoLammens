@@ -62,7 +62,7 @@ void CellSpace::UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos)
 {
 	//TODO Check if the agent needs to be moved to another cell.
 	//TODO Use the calculated index for oldPos and currentPos for this
-	
+
 	int OldIndex = PositionToIndex(OldPos);
 	int NewIndex = PositionToIndex(Agent.GetPosition());
 
@@ -77,7 +77,7 @@ void CellSpace::RegisterNeighbors(ASteeringAgent& Agent, float QueryRadius)
 {
 	// TODO Register the neighbors for the provided agent
 	// TODO Only check the cells that are within the radius of the neighborhood
-	
+
 	NrOfNeighbors = 0;
 
 	FRect QueryRect;
@@ -111,16 +111,22 @@ void CellSpace::RenderCells() const
 	{
 		FVector2D Min = cell.BoundingBox.Min;
 		FVector2D Max = cell.BoundingBox.Max;
+		float Z = 100.f;
 
-		DrawDebugBox(pWorld,
-			FVector((Min + Max) * 0.5f, 0.f),
-			FVector((Max.X - Min.X) * 0.5f, (Max.Y - Min.Y) * 0.5f, 1.f),
-			FColor::Blue, false, -1.f, 0, 1.f);
+		FVector TopLeft    (Min.X, Min.Y, Z);
+		FVector TopRight   (Max.X, Min.Y, Z);
+		FVector BottomLeft (Min.X, Max.Y, Z);
+		FVector BottomRight(Max.X, Max.Y, Z);
+
+		DrawDebugLine(pWorld, TopLeft,     TopRight,    FColor::Blue, false, -1.f, SDPG_Foreground, 2.f);
+		DrawDebugLine(pWorld, TopRight,    BottomRight, FColor::Blue, false, -1.f, SDPG_Foreground, 2.f);
+		DrawDebugLine(pWorld, BottomRight, BottomLeft,  FColor::Blue, false, -1.f, SDPG_Foreground, 2.f);
+		DrawDebugLine(pWorld, BottomLeft,  TopLeft,     FColor::Blue, false, -1.f, SDPG_Foreground, 2.f);
 
 		int AgentCount = cell.Agents.size();
 		if (AgentCount > 0)
 			DrawDebugString(pWorld,
-				FVector((Min + Max) * 0.5f, 10.f),
+				FVector((Min + Max) * 0.5f, 120.f),
 				FString::FromInt(AgentCount),
 				nullptr, FColor::White, 0.f);
 	}
