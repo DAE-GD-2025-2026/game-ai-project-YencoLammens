@@ -3,6 +3,11 @@
 #include "Shared/ImGuiHelpers.h"
 #include "DrawDebugHelpers.h"
 
+#ifdef GAMEAI_USE_SPACE_PARTITIONING
+#include "../SpacePartitioning/SpacePartitioning.h"
+#endif
+
+
 Flock::Flock(
 	UWorld* pWorld,
 	TSubclassOf<ASteeringAgent> AgentClass,
@@ -18,7 +23,9 @@ Flock::Flock(
 	, AgentClass{ AgentClass }
 {
 	Agents.SetNum(FlockSize);
+#ifndef GAMEAI_USE_SPACE_PARTITIONING
 	Neighbors.SetNum(FlockSize);
+#endif
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -61,6 +68,21 @@ Flock::Flock(
 	for (ASteeringAgent* pAgent : Agents)
 		if (pAgent)
 			pAgent->SetSteeringBehavior(pPrioritySteering.get());
+	
+#ifdef GAMEAI_USE_SPACE_PARTITIONING
+	OldPositions.SetNum(FlockSize);
+	pPartitionedSpace = std::make_unique<CellSpace>(
+	pWorld, WorldSize * 2.f, WorldSize * 2.f, NrOfCellsX, NrOfCellsX, FlockSize);
+
+	for (int i = 0; i < FlockSize; ++i)
+	{
+		if (Agents[i])
+		{
+			pPartitionedSpace->AddAgent(*Agents[i]);
+			OldPositions[i] = Agents[i]->GetPosition();
+		}
+	}
+#endif
 }
 
 Flock::~Flock()
@@ -81,7 +103,13 @@ void Flock::Tick(float DeltaTime)
 		ASteeringAgent* pAgent = Agents[i];
 		if (!pAgent) continue;
 
+#ifndef GAMEAI_USE_SPACE_PARTITIONING
 		RegisterNeighbors(pAgent);
+#else
+		pPartitionedSpace->UpdateAgentCell(*pAgent, OldPositions[i]);
+		OldPositions[i] = pAgent->GetPosition();
+		pPartitionedSpace->RegisterNeighbors(*pAgent, NeighborhoodRadius);
+#endif
 
 		if (pAgentToEvade && pEvadeBehavior)
 		{
@@ -98,6 +126,10 @@ void Flock::RenderDebug()
  // TODO: Render all the agents in the flock
 	if (bDebugRenderNeighborhood && Agents.Num() > 0)
 		RenderNeighborhood();
+#ifdef GAMEAI_USE_SPACE_PARTITIONING
+	if (bDebugRenderPartitions)
+		pPartitionedSpace->RenderCells();
+#endif
 }
 
 void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
@@ -150,6 +182,10 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 		ImGui::Spacing();
 		ImGui::Text("Behavior Weights");
 		ImGui::Spacing();
+
+#ifdef GAMEAI_USE_SPACE_PARTITIONING
+		ImGui::Checkbox("Debug Partitions", &bDebugRenderPartitions);
+#endif
 
   // TODO: implement ImGUI sliders for steering behavior weights here
 		auto& Behaviors = pBlendedSteering->GetWeightedBehaviorsRef();
