@@ -100,11 +100,10 @@ void ALevel_GraphTheory::Tick(float DeltaTime)
 #pragma endregion UI
 	
 	Renderer.RenderGraph(Graph);
-	
-	// temporary test
 	EulerianPath ep(&Graph);
-	Eulerianity e = ep.IsEulerian();
-	UE_LOG(LogTemp, Warning, TEXT("Eulerianity: %d"), static_cast<int>(e));
+	Eulerianity e{};
+	auto path = ep.FindPath(e);
+	UE_LOG(LogTemp, Warning, TEXT("Path size: %d"), static_cast<int>(path.size()));
 	
 	// TODO Check if the graph has updated
 	// TODO if so, run the EulerianPath algorithm

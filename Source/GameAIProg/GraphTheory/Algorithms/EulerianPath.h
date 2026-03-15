@@ -68,10 +68,49 @@ namespace GameAI
 		int currentNodeId{ Graphs::InvalidNodeId };
 		
 		// TODO Check if there can be an Euler path
+		eulerianity = IsEulerian();
+		
 		// TODO If this graph is not eulerian, return the empty path
+		if (eulerianity == Eulerianity::notEulerian)
+			return Path;
 		
 		// TODO Start algorithm loop
+		if (eulerianity == Eulerianity::eulerian)
+		{
+			currentNodeId = Nodes[0]->GetId();
+		}
+		else
+		{
+			for (Node* pNode : Nodes)
+			{
+				if (graphCopy.FindConnectionsFrom(pNode->GetId()).size() % 2 != 0)
+				{
+					currentNodeId = pNode->GetId();
+					break;
+				}
+			}
+		}
+
 		std::stack<int> nodeStack;
+
+		while (!graphCopy.FindConnectionsFrom(currentNodeId).empty() || !nodeStack.empty())
+		{
+			if (!graphCopy.FindConnectionsFrom(currentNodeId).empty())
+			{
+				nodeStack.push(currentNodeId);
+				int neighborId = graphCopy.FindConnectionsFrom(currentNodeId)[0]->GetToId();
+				graphCopy.RemoveConnection(currentNodeId, neighborId);
+				currentNodeId = neighborId;
+			}
+			else
+			{
+				Path.push_back(m_pGraph->GetNode(currentNodeId).get());
+				currentNodeId = nodeStack.top();
+				nodeStack.pop();
+			}
+		}
+
+		Path.push_back(m_pGraph->GetNode(currentNodeId).get());
 
 		std::reverse(Path.begin(), Path.end());
 		return Path;
