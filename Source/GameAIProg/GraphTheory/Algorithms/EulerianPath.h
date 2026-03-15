@@ -34,17 +34,29 @@ namespace GameAI
 	inline Eulerianity EulerianPath::IsEulerian() const
 	{
 		// TODO If the graph is not connected, there can be no Eulerian Trail
-
+		if (!IsConnected())
+			return Eulerianity::notEulerian;
+		
 		// TODO Count nodes with odd degree 
+		int oddDegreeCount = 0;
+		for (Node* pNode : m_pGraph->GetActiveNodes())
+		{
+			int degree = static_cast<int>(m_pGraph->FindConnectionsFrom(pNode->GetId()).size());
+			if (degree % 2 != 0)
+				++oddDegreeCount;
+		}
 
 		// TODO A connected graph with more than 2 nodes with an odd degree (an odd amount of connections) is not Eulerian
-
+		if (oddDegreeCount > 2)
+			return Eulerianity::notEulerian;
+		
 		// TODO A connected graph with exactly 2 nodes with an odd degree is Semi-Eulerian (unless there are only 2 nodes)
 		// TODO An Euler trail can be made, but only starting and ending in these 2 nodes
-
-		// TODO A connected graph with no odd nodes is Eulerian
+		if (oddDegreeCount == 2)
+			return Eulerianity::semiEulerian;
 		
-		return Eulerianity::notEulerian;
+		// TODO A connected graph with no odd nodes is Eulerian
+		return Eulerianity::eulerian;
 	}
 
 	inline std::vector<Node*> EulerianPath::FindPath(Eulerianity& eulerianity) const
@@ -95,12 +107,8 @@ namespace GameAI
 			return false;
 
 		// TODO choose a starting node
-		
-		// TODO start a depth-first-search traversal from the node that has at least one connection
-		
-		// TODO if a node was never visited, this graph is not connected
-		
 		int startIndex = 0;
+		// TODO start a depth-first-search traversal from the node that has at least one connection
 		for (int i = 0; i < static_cast<int>(Nodes.size()); ++i)
 		{
 			if (!m_pGraph->FindConnectionsFrom(Nodes[i]->GetId()).empty())
@@ -109,15 +117,19 @@ namespace GameAI
 				break;
 			}
 		}
-	
 		std::vector<bool> visited(Nodes.size(), false);
 		VisitAllNodesDFS(Nodes, visited, startIndex);
-	
+		
+		// TODO if a node was never visited, this graph is not connected
 		for (bool wasVisited : visited)
 		{
 			if (!wasVisited)
 				return false;
 		}
 		return true;
+		
+		
+	
+		
 	}
 }
