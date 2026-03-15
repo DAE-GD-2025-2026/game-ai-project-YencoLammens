@@ -40,6 +40,8 @@ private:
 	GameAI::GraphRenderer Renderer{nullptr};
 	GameAI::GraphNodeFactory<GameAI::Node> NodeFactory{};
 	
+	float AgentOriginalMaxSpeed{0.f};
+	
 	UPROPERTY()
 	UGraphEditorComponent* PlayerGraphEditor{}; // ref
 	

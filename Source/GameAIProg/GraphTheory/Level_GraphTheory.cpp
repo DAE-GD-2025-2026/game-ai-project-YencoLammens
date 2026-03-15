@@ -49,6 +49,9 @@ void ALevel_GraphTheory::BeginPlay()
 	Agent = GetWorld()->SpawnActor<ASteeringAgent>(SteeringAgentClass, 
 	FVector{0,0,90}, FRotator::ZeroRotator);
 	Agent->SetSteeringBehavior(&PathFollow);
+	
+	AgentOriginalMaxSpeed = Agent->GetMaxLinearSpeed();
+	
 }
 
 void ALevel_GraphTheory::BeginDestroy()
@@ -120,6 +123,7 @@ void ALevel_GraphTheory::UpdateAgentPath(std::vector<Node*> const& Trail)
 	for (Node* pNode : Trail)
 		path.push_back(pNode->GetPosition());
 	
+	Agent->SetMaxLinearSpeed(AgentOriginalMaxSpeed);	
 	PathFollow.SetPath(path);
 	if (path.size() > 0)
 	{
