@@ -61,6 +61,7 @@ private:
 
 	void CalculatePath();
 	void UpdateAgentPath(std::vector<GameAI::Node*> const & Path);
+	float AgentOriginalMaxSpeed{0.f};
 	
 	void UpdateImGui();
 	

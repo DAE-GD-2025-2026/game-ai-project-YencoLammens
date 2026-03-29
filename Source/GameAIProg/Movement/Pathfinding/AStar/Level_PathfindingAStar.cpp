@@ -1,4 +1,4 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
+﻿	// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "Level_PathfindingAStar.h"
@@ -39,6 +39,7 @@ void ALevel_PathfindingAStar::BeginPlay()
 	FVector{0,0,90}, FRotator::ZeroRotator);
 	Agent->SetDebugRenderingEnabled(false);
 	Agent->SetSteeringBehavior(&PathFollow);
+	AgentOriginalMaxSpeed = Agent->GetMaxLinearSpeed();
 	
 	// Create graph & renderer
 	Renderer = new GraphRenderer{GetWorld()};
@@ -146,6 +147,7 @@ void ALevel_PathfindingAStar::UpdateAgentPath(std::vector<Node*> const& Path)
 		pathPositions.emplace_back(pNode->GetPosition());
 	}
 
+	Agent->SetMaxLinearSpeed(AgentOriginalMaxSpeed);
 	PathFollow.SetPath(pathPositions);
 	if (pathPositions.size() > 0)
 	{
