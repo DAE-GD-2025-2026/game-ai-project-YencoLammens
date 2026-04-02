@@ -37,6 +37,8 @@ private:
 	PathFollow PathFollow{};
 	std::vector<FVector2D> DebugDrawPath{};
 	
+	float AgentOriginalMaxSpeed{0.f};
+	
 	bool bDrawNavPolyVertices{false};
 	bool bDrawNavPoly{true};
 	bool bDrawNavGraph{true};

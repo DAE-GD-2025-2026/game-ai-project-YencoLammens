@@ -44,6 +44,7 @@ void ALevel_Navmesh::BeginPlay()
 	FVector{2100.0,2100.0,90}, FRotator::ZeroRotator);
 	Agent->SetDebugRenderingEnabled(false);
 	Agent->SetSteeringBehavior(&PathFollow);
+	AgentOriginalMaxSpeed = Agent->GetMaxLinearSpeed();
 	
 	auto NavPoly{std::make_unique<TriPolygon>()};
 	for (TArray<FVector> const & Tri : ExtractNavMeshTris())
@@ -223,6 +224,7 @@ void ALevel_Navmesh::SetTarget()
 	PathFollow.SetPath(Path);
 	if (Path.size() > 0)
 	{
+		Agent->SetMaxLinearSpeed(AgentOriginalMaxSpeed);
 		Agent->SetPosition(Path[0]);
 	}
 }
