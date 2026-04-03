@@ -20,6 +20,9 @@ public:
 		//Container
 		std::vector<NavLine> Portals = {};
 		
+		if (Path.size() < 2)
+			return Portals;
+		
 		//For each node received, get it's corresponding line
 		FVector2D startPoint = Path.front()->GetPosition();
         Portals.push_back(NavLine{startPoint, startPoint});
