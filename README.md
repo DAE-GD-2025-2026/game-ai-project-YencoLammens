@@ -10,9 +10,11 @@ Implemented the first 3 weeks of steering behaviours
 * Combined Steering
 * Flocking (+ space partitioning)
 
+Implemented topics of week 4 - 6 of pathfinding
 
-
-Do boids swim or fly? That is the real question
+* Graph theory
+* A* Pathfinding
+* NavMesh pathfinding (+ SSFA)
 
 
 
