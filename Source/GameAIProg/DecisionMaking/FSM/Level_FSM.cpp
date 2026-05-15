@@ -13,6 +13,7 @@
 #include "DecisionMaking/GameAIController.h"
 #include "States/PatrolState.h"
 #include "States/ChaseState.h"
+#include "States/SearchState.h"
 #include "GameAIProg/Movement/SteeringBehaviors/Steering/SteeringBehaviors.h"
 #include "DrawDebugHelpers.h"
 #include "imgui.h"
@@ -125,6 +126,7 @@ void ALevel_FSM::SetupGuard()
 	// -- States --
 	GameAI::FSM::State* pPatrol = FSMComp->AddState(std::make_unique<GameAI::FSM::PatrolState>(NavigationGraph.get()));
 	GameAI::FSM::State* pChase  = FSMComp->AddState(std::make_unique<GameAI::FSM::ChaseState>());
+	GameAI::FSM::State* pSearch = FSMComp->AddState(std::make_unique<GameAI::FSM::SearchState>(NavigationGraph.get()));
 
 	auto IsTargetVisible = [this]() -> bool
 	{
@@ -150,9 +152,19 @@ void ALevel_FSM::SetupGuard()
 		return !IsTargetVisible();
 	};
 
-	FSMComp->AddTransition(pPatrol, pChase,  IsTargetVisible);
-	FSMComp->AddTransition(pChase,  pPatrol, IsTargetNotVisible);
+	auto IsSearchingTooLong = [this, FSMComp]() -> bool
+	{
+		if (!FSMComp) return false;
+		GameAI::FSM::Blackboard& BB = FSMComp->GetBlackboard();
+		if (!BB.Has("SearchElapsedTime")) return false;
+		return BB.Get<float>("SearchElapsedTime") >= SearchDuration;
+	};
 
+	FSMComp->AddTransition(pPatrol, pChase,  IsTargetVisible);
+	FSMComp->AddTransition(pChase,  pSearch, IsTargetNotVisible);
+	FSMComp->AddTransition(pSearch, pChase,  IsTargetVisible);
+	FSMComp->AddTransition(pSearch, pPatrol, IsSearchingTooLong);
+	
 	FSMComp->SetInitialState(pPatrol);
 	GuardController->RunFiniteStateMachine();
 	
