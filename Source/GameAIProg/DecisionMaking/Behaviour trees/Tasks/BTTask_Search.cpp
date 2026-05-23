@@ -45,6 +45,14 @@ void UBTTask_Search::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemo
     ASteeringAgent* Agent = Controller ? Cast<ASteeringAgent>(Controller->GetPawn()) : nullptr;
     if (!Agent) return;
 
+    UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+
+    if (BB->GetValueAsObject(BBKeys::TargetActor))
+    {
+        FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+        return;
+    }
+
     SearchElapsed += DeltaSeconds;
     if (SearchElapsed >= Controller->SearchDuration)
     {

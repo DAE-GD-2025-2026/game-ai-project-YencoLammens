@@ -4,6 +4,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BBKeys.h"
+#include "GameAIProg/Movement/SteeringBehaviors/SteeringAgent.h"
 
 ABTGuardController::ABTGuardController()
 {
@@ -13,7 +14,7 @@ ABTGuardController::ABTGuardController()
     SightConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightConfig"));
     SightConfig->SightRadius = 400.f;
     SightConfig->LoseSightRadius = 500.f;
-    SightConfig->PeripheralVisionAngleDegrees = 90.f;
+    SightConfig->PeripheralVisionAngleDegrees = 180.f;
     SightConfig->SetMaxAge(5.f);
     SightConfig->DetectionByAffiliation.bDetectEnemies = true;
     SightConfig->DetectionByAffiliation.bDetectNeutrals = true;
@@ -27,6 +28,8 @@ ABTGuardController::ABTGuardController()
 void ABTGuardController::OnPossess(APawn* InPawn)
 {
     Super::OnPossess(InPawn);
+    if (ASteeringAgent* Agent = Cast<ASteeringAgent>(InPawn))
+        AgentMaxSpeed = Agent->GetMaxLinearSpeed();
     if (GuardBehaviorTree)
         RunBehaviorTree(GuardBehaviorTree);
 }

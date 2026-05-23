@@ -1,6 +1,8 @@
 #include "BTTask_Patrol.h"
 #include "DecisionMaking/Behaviour trees/BTGuardController.h"
+#include "DecisionMaking/Behaviour trees/BBKeys.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameAIProg/Movement/SteeringBehaviors/SteeringAgent.h"
 #include "GameAIProg/Movement/SteeringBehaviors/PathFollow/PathFollowSteeringBehavior.h"
 #include "GraphTheory/Algorithms/NavGraphPathfinding.h"
@@ -32,6 +34,13 @@ EBTNodeResult::Type UBTTask_Patrol::ExecuteTask(UBehaviorTreeComponent& OwnerCom
 
 void UBTTask_Patrol::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
+    UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+    if (BB && BB->GetValueAsObject(BBKeys::TargetActor))
+    {
+        FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+        return;
+    }
+
     ABTGuardController* Controller = Cast<ABTGuardController>(OwnerComp.GetAIOwner());
     ASteeringAgent* Agent = Controller ? Cast<ASteeringAgent>(Controller->GetPawn()) : nullptr;
     if (!Agent) return;

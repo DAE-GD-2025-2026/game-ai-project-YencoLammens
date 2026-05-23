@@ -24,6 +24,7 @@ public:
 
 	GameAI::NavGraph* GetNavGraph() const { return NavigationGraph; }
 	const TArray<FVector2D>& GetPatrolPath() const { return PatrolPath; }
+	float GetAgentMaxSpeed() const { return AgentMaxSpeed; }
 
 	UPROPERTY(EditDefaultsOnly, Category="BT")
 	UBehaviorTree* GuardBehaviorTree{nullptr};
@@ -38,4 +39,5 @@ private:
 	UAISenseConfig_Sight* SightConfig{nullptr};
 	GameAI::NavGraph* NavigationGraph{nullptr};
 	TArray<FVector2D> PatrolPath;
+	float AgentMaxSpeed{0.f};
 };

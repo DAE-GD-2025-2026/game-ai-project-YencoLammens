@@ -1,6 +1,7 @@
 #include "BTTask_Chase.h"
 #include "AIController.h"
 #include "DecisionMaking/Behaviour trees/BBKeys.h"
+#include "DecisionMaking/Behaviour trees/BTGuardController.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "GameAIProg/Movement/SteeringBehaviors/SteeringAgent.h"
@@ -14,7 +15,8 @@ UBTTask_Chase::UBTTask_Chase()
 
 EBTNodeResult::Type UBTTask_Chase::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	ASteeringAgent* Agent = Cast<ASteeringAgent>(OwnerComp.GetAIOwner()->GetPawn());
+	ABTGuardController* Controller = Cast<ABTGuardController>(OwnerComp.GetAIOwner());
+	ASteeringAgent* Agent = Controller ? Cast<ASteeringAgent>(Controller->GetPawn()) : nullptr;
 	if (!Agent) return EBTNodeResult::Failed;
 
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
@@ -23,7 +25,8 @@ EBTNodeResult::Type UBTTask_Chase::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 	if (!pSeek)
 		pSeek = MakeUnique<Seek>();
 
-	OriginalMaxSpeed = Agent->GetMaxLinearSpeed();
+	OriginalMaxSpeed = Controller->GetAgentMaxSpeed();
+	Agent->SetMaxLinearSpeed(OriginalMaxSpeed);
 	Agent->SetSteeringBehavior(pSeek.Get());
 
 	return EBTNodeResult::InProgress;
