@@ -91,7 +91,6 @@ void ALevel_BT::SetupThief()
     UAIPerceptionSystem::RegisterPerceptionStimuliSource(GetWorld(), UAISense_Sight::StaticClass(), ThiefAgent);
 
     ThiefController = GetWorld()->SpawnActor<AThiefController>();
-    ThiefController->SetNavGraph(NavigationGraph.get());
     ThiefController->Possess(ThiefAgent);
 }
 

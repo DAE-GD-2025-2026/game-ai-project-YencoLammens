@@ -1,4 +1,5 @@
 #include "BTTask_Chase.h"
+#include "AIController.h"
 #include "DecisionMaking/Behaviour trees/BBKeys.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BlackboardComponent.h"
@@ -16,6 +17,9 @@ EBTNodeResult::Type UBTTask_Chase::ExecuteTask(UBehaviorTreeComponent& OwnerComp
 	ASteeringAgent* Agent = Cast<ASteeringAgent>(OwnerComp.GetAIOwner()->GetPawn());
 	if (!Agent) return EBTNodeResult::Failed;
 
+	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
+	if (!BB || !BB->GetValueAsObject(BBKeys::TargetActor)) return EBTNodeResult::Failed;
+
 	if (!pSeek)
 		pSeek = MakeUnique<Seek>();
 
@@ -29,7 +33,13 @@ void UBTTask_Chase::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemor
 {
 	UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
 	ASteeringAgent* Target = Cast<ASteeringAgent>(BB->GetValueAsObject(BBKeys::TargetActor));
-	if (!Target) return;
+	if (!Target)
+	{
+		if (ASteeringAgent* Agent = Cast<ASteeringAgent>(OwnerComp.GetAIOwner()->GetPawn()))
+			Agent->SetMaxLinearSpeed(OriginalMaxSpeed);
+		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		return;
+	}
 
 	FTargetData TargetData;
 	TargetData.Position = Target->GetPosition();

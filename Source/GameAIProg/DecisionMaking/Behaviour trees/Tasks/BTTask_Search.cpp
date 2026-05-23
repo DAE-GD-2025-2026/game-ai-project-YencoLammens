@@ -20,6 +20,9 @@ EBTNodeResult::Type UBTTask_Search::ExecuteTask(UBehaviorTreeComponent& OwnerCom
     ASteeringAgent* Agent = Controller ? Cast<ASteeringAgent>(Controller->GetPawn()) : nullptr;
     if (!Agent) return EBTNodeResult::Failed;
 
+    if (!OwnerComp.GetBlackboardComponent()->GetValueAsBool(BBKeys::bShouldSearch))
+        return EBTNodeResult::Failed;
+
     if (!pPathFollow)
         pPathFollow = MakeUnique<PathFollow>();
 

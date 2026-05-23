@@ -2,8 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include <memory>
-#include <vector>
 #include "BTTask_Search.generated.h"
 
 class PathFollow;

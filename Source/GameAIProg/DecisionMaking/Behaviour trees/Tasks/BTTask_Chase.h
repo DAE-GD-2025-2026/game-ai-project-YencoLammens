@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTTaskNode.h"
-#include <memory>
 #include "BTTask_Chase.generated.h"
 
 class Seek;
