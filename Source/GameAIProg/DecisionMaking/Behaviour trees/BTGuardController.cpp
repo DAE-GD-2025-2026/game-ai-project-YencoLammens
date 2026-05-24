@@ -37,7 +37,7 @@ void ABTGuardController::OnPossess(APawn* InPawn)
 void ABTGuardController::OnTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
     UBlackboardComponent* BB = GetBlackboardComponent();
-    if (!BB) return;
+    if (!BB || !IsValid(Actor)) return;
 
     if (Stimulus.WasSuccessfullySensed())
     {
@@ -57,5 +57,7 @@ void ABTGuardController::SetDetectionRadius(float Radius)
     if (!SightConfig) return;
     SightConfig->SightRadius = Radius;
     SightConfig->LoseSightRadius = Radius + 100.f;
-    GetPerceptionComponent()->ConfigureSense(*SightConfig);
+    UAIPerceptionComponent* PerceptionComp = GetPerceptionComponent();
+    PerceptionComp->ConfigureSense(*SightConfig);
+    PerceptionComp->RequestStimuliListenerUpdate();
 }

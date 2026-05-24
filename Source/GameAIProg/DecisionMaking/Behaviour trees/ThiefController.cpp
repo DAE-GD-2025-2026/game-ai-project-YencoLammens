@@ -38,7 +38,7 @@ void AThiefController::Tick(float DeltaTime)
         if (!bEvading)
         {
             bEvading = true;
-            Agent->SetMaxLinearSpeed(OriginalMaxSpeed);
+            Agent->SetMaxLinearSpeed(OriginalMaxSpeed * EvadeSpeedMultiplier);
             Agent->SetSteeringBehavior(pEvade.Get());
         }
 

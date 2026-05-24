@@ -19,15 +19,20 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	void SetGuardAgent(ASteeringAgent* InGuard) { GuardAgent = InGuard; }
-
+	void SetEvadeDetectionRadius(float Radius) { EvadeRadius = Radius; }
+	
 private:
 	bool IsGuardNearby() const;
 
 	TUniquePtr<Wander> pWander;
 	TUniquePtr<Evade> pEvade;
+
+	UPROPERTY()
 	ASteeringAgent* GuardAgent{nullptr};
+
 	float OriginalMaxSpeed{0.f};
 	bool bEvading{false};
 
-	static constexpr float EvadeRadius{350.f};
+	static constexpr float EvadeSpeedMultiplier{1.5f};
+	float EvadeRadius{350.f};
 };
