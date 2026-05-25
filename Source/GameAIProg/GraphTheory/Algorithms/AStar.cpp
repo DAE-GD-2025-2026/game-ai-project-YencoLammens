@@ -67,7 +67,18 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 	}
 
 	if (currentRecord.pNode != pGoalNode)
-		return path;
+	{
+		if (closedList.empty())
+			return path;
+
+		auto closestIt = std::min_element(closedList.begin(), closedList.end(),
+			[&](NodeRecord const& a, NodeRecord const& b)
+			{
+				return GetHeuristicCost(a.pNode, pGoalNode) < GetHeuristicCost(b.pNode, pGoalNode);
+			});
+		
+		currentRecord = *closestIt;
+	}
 
 	while (currentRecord.pNode != pStartNode)
 	{
